@@ -11,7 +11,10 @@ int parsePropFile(const char *filename, struct Object *obj){
     char message_str[100];
     char *key;
     char *value;
-    struct Field field;
+
+    if (fileptr==NULL){
+        return -1;
+    }
 
     /* fields is heap-allocated (not a fixed-size stack array) so it has no
      * hard cap on the number of keys and so obj->fields stays valid after
@@ -20,17 +23,15 @@ int parsePropFile(const char *filename, struct Object *obj){
     size_t fldsize = 0;
     struct Field *fields = malloc(capacity * sizeof(struct Field));
     if (fields == NULL){
+        fclose(fileptr);
         return -1;
     }
 
-    if (fileptr==NULL){
-        free(fields);
-        return -1;
-    }
-    else{
+    {
         int fieldCnt = 0;
 
         while (fgets(message_str, sizeof message_str, fileptr) != NULL) {
+                struct Field field;
                 int index = 0;
                 size_t len = strlen(message_str);
                 size_t i;
