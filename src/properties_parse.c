@@ -68,9 +68,8 @@ int parsePropFile(const char *filename, struct Object *obj){
                     }
                     if (c && c != '\n') {
                         value[v] = c;
+                        v++;
                     }
-
-                    v++;
                 }
                 value[v]= '\0';
                 field.key = strdup(key);
