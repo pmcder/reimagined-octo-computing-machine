@@ -23,7 +23,7 @@ int parsePropFile(const char *filename, struct Object *obj){
     size_t fldsize = 0;
     struct Field *fields = malloc(capacity * sizeof(struct Field));
     if (fields == NULL){
-        fclose(fileptr);
+        (void)fclose(fileptr);
         return -1;
     }
 
@@ -41,7 +41,7 @@ int parsePropFile(const char *filename, struct Object *obj){
                         free(key);
                         free(value);
                         free(fields);
-                        fclose(fileptr);
+                        (void)fclose(fileptr);
                         return -1;
                     }
                 for (i = 0; i < len; i++ ){
@@ -53,7 +53,7 @@ int parsePropFile(const char *filename, struct Object *obj){
                     key[i]= c;
                 }
                 if (c == '=') {
-                    index = i+1;
+                    index = (int)(i + 1);
                     break;
                 }
                 }
@@ -85,7 +85,7 @@ int parsePropFile(const char *filename, struct Object *obj){
                         free(field.key);
                         free(field.value);
                         free(fields);
-                        fclose(fileptr);
+                        (void)fclose(fileptr);
                         return -1;
                     }
                     fields = grown;
@@ -97,7 +97,7 @@ int parsePropFile(const char *filename, struct Object *obj){
     }
     obj->fields = fields;
     obj->count = fldsize;
-    fclose(fileptr);
+    (void)fclose(fileptr);
     return 1;
 }
 
@@ -110,6 +110,7 @@ const char *getValue(const char *thiskey, struct Object *obj){
     return "key not found";
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 const char *getPropertyValue(const char *key, const char *filename) {
     struct Object obj;
     struct Object *ojb_ptr = &obj;
