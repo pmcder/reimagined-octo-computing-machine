@@ -113,9 +113,18 @@ const char *getValue(const char *thiskey, struct Object *obj){
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 const char *getPropertyValue(const char *key, const char *filename) {
     struct Object obj;
-    struct Object *ojb_ptr = &obj;
-    if (parsePropFile(filename, ojb_ptr) < 0) {
+    if (parsePropFile(filename, &obj) < 0) {
         return NULL;
     }
-    return  getValue(key,ojb_ptr);
+
+    const char *found = getValue(key, &obj);
+    char *result = strdup(found);
+
+    for (size_t i = 0; i < obj.count; i++) {
+        free(obj.fields[i].key);
+        free(obj.fields[i].value);
+    }
+    free(obj.fields);
+
+    return result;
 }
