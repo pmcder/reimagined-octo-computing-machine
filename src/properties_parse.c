@@ -110,7 +110,7 @@ const char *getValue(const char *thiskey, struct Object *obj){
     return "key not found";
 }
 
-const char *getPropertyValue(char *key, char *filename) {
+const char *getPropertyValue(const char *key, const char *filename) {
     struct Object obj;
     struct Object *ojb_ptr = &obj;
     if (parsePropFile(filename, ojb_ptr) < 0) {
