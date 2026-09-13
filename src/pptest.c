@@ -1,8 +1,8 @@
 #include "properties_parse.h"
 #include <stdio.h>
 typedef struct {
-    char *port;
-    char *docroot;
+    const char *port;
+    const char *docroot;
 }Props;
 
 Props p;
@@ -15,6 +15,7 @@ int main(void){
 
     p.docroot = getPropertyValue("docroot","app.properties");
     p.port = getPropertyValue("port","app.properties");
-    char *test = getPropertyValue("lamekey","app.properties");
+    const char *test = getPropertyValue("lamekey","app.properties");
     printf("%s\n",props_get()->docroot);
+    printf("%s\n",test);
 }

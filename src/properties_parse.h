@@ -12,6 +12,6 @@ struct Object {
     size_t count;
 };
 
-const char *getPropertyValue(char *key, char *filename);
+const char *getPropertyValue(const char *key, const char *filename);
 
 #endif
