@@ -55,11 +55,15 @@ endif()
 add_library(unity STATIC ${unity_SOURCE_DIR}/src/unity.c)
 target_include_directories(unity SYSTEM PUBLIC ${unity_SOURCE_DIR}/src)
 
+# Compile properties_parse.c directly into the test binary (rather than
+# linking the props-parse static library) so it can be built with
+# sanitizers below without instrumenting the shipped library artifact.
 add_executable(props-parse-tests
         test/test_properties_parse.c
+        src/properties_parse.c
 )
 
-target_link_libraries(props-parse-tests PRIVATE props-parse unity)
+target_link_libraries(props-parse-tests PRIVATE unity)
 
 # The test suite exercises parsePropFile()/getValue() directly (white-box),
 # which are only declared in the internal src/properties_parse.h, not the
@@ -69,6 +73,14 @@ target_include_directories(props-parse-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 target_compile_definitions(props-parse-tests PRIVATE
         FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/fixtures/"
 )
+
+# AddressSanitizer + UndefinedBehaviorSanitizer on the test binary only -
+# catches memory-safety and UB bugs in properties_parse.c for free, at the
+# cost of a couple of compiler flags. Not applied to the shipped library.
+if(NOT MSVC)
+    target_compile_options(props-parse-tests PRIVATE -g -fsanitize=address,undefined)
+    target_link_options(props-parse-tests PRIVATE -fsanitize=address,undefined)
+endif()
 
 add_test(NAME props-parse-unit-tests COMMAND props-parse-tests)
 
