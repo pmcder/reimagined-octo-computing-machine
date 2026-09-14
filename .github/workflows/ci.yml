@@ -18,6 +18,20 @@ jobs:
       - name: Build
         run: cmake --build build
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
   clang-tidy:
     runs-on: ubuntu-latest
     steps:
