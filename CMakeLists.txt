@@ -61,6 +61,11 @@ add_executable(props-parse-tests
 
 target_link_libraries(props-parse-tests PRIVATE props-parse unity)
 
+# The test suite exercises parsePropFile()/getValue() directly (white-box),
+# which are only declared in the internal src/properties_parse.h, not the
+# public include/properties_parse_api.h.
+target_include_directories(props-parse-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 target_compile_definitions(props-parse-tests PRIVATE
         FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/fixtures/"
 )
