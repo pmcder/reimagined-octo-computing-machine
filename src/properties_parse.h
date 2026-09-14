@@ -12,6 +12,8 @@ struct Object {
     size_t count;
 };
 
+int parsePropFile(const char *filename, struct Object *obj);
+const char *getValue(const char *thiskey, struct Object *obj);
 const char *getPropertyValue(const char *key, const char *filename);
 
 #endif
