@@ -1,0 +1,4 @@
+build/
+mutants/
+killed.txt
+notkilled.txt
