@@ -32,6 +32,53 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
+  mutation-testing:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install universalmutator
+        run: pip install --break-system-packages universalmutator==1.14.1
+
+      - name: Configure and build baseline (also fetches Unity via FetchContent)
+        run: |
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Confirm baseline tests pass
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Generate mutants for properties_parse.c
+        run: mutate src/properties_parse.c c --mutantDir mutants --noCheck
+
+      - name: Compute allow-list (every generated mutant minus known exclusions)
+        run: |
+          ls mutants | sort > /tmp/all_mutants.txt
+          awk '{print $1}' test/mutation_exclusions.txt | grep -v '^#' | grep -v '^$' | sort > /tmp/excluded.txt
+          comm -23 /tmp/all_mutants.txt /tmp/excluded.txt > /tmp/allow_list.txt
+          echo "Total mutants generated: $(wc -l < /tmp/all_mutants.txt)"
+          echo "Excluded (test/mutation_exclusions.txt): $(wc -l < /tmp/excluded.txt)"
+          echo "Must be killed: $(wc -l < /tmp/allow_list.txt)"
+
+      - name: Run mutation analysis
+        run: |
+          analyze_mutants src/properties_parse.c "test/run_mutant_test.sh" \
+            --mutantDir mutants --fromFile /tmp/allow_list.txt
+
+      - name: Fail on any surviving mutant not in the exclusion list
+        run: |
+          if [ -s notkilled.txt ]; then
+            echo "The following mutants survived and are NOT listed in test/mutation_exclusions.txt:"
+            cat notkilled.txt
+            echo
+            echo "Either the change introduced a real gap in test coverage (add a test)"
+            echo "or these are newly-discovered equivalent mutants (add them to"
+            echo "test/mutation_exclusions.txt with a comment explaining why)."
+            exit 1
+          fi
+          echo "All non-excluded mutants were killed."
+
   clang-tidy:
     runs-on: ubuntu-latest
     steps:
