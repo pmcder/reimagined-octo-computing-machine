@@ -111,6 +111,18 @@ static void test_getPropertyValue_GrowthBeyondInitialCapacityExercisesRealloc(vo
     free(last);
 }
 
+static void test_getPropertyValue_MalformedLineDoesNotBreakSubsequentLookups(void) {
+    /* A line with neither '=' nor a leading '#' (garbage input) still
+     * yields a spurious Field rather than aborting the parse - real keys
+     * before and after it must still resolve correctly. */
+    char *first = (char *)getPropertyValue("first", FIXTURE("malformed_line.properties"));
+    char *second = (char *)getPropertyValue("second", FIXTURE("malformed_line.properties"));
+    TEST_ASSERT_EQUAL_STRING("one", first);
+    TEST_ASSERT_EQUAL_STRING("two", second);
+    free(first);
+    free(second);
+}
+
 /* ---- White-box tests of parsePropFile() / getValue() ------------------ */
 
 static void test_parsePropFile_ReturnsMinusOneOnMissingFile(void) {
@@ -146,6 +158,20 @@ static void test_parsePropFile_CountMatchesExpectedAfterReallocGrowth(void) {
     freeObject(&obj);
 }
 
+static void test_parsePropFile_MalformedLineValueScanStartsAtIndexZero(void) {
+    /* A line with no '=' never reassigns `index`, so the value-scan loop
+     * starts at 0 and copies the WHOLE line (minus the trailing newline)
+     * into the spurious field's value - pinning this kills any mutation
+     * of that initial index value, which would otherwise silently produce
+     * an empty value instead. */
+    struct Object obj;
+    int result = parsePropFile(FIXTURE("malformed_line.properties"), &obj);
+    TEST_ASSERT_EQUAL_INT(1, result);
+    TEST_ASSERT_EQUAL_size_t(3, obj.count);
+    TEST_ASSERT_EQUAL_STRING("not a valid line at all", obj.fields[1].value);
+    freeObject(&obj);
+}
+
 static void test_getValue_ReturnsValueWhenPresent(void) {
     struct Field fields[] = {
         {(char *)"a", (char *)"1"},
@@ -178,11 +204,13 @@ int main(void) {
     RUN_TEST(test_getPropertyValue_BlankLineDoesNotBreakSubsequentLookups);
     RUN_TEST(test_getPropertyValue_KeyWithSurroundingWhitespaceDoesNotMatchTrimmedKey);
     RUN_TEST(test_getPropertyValue_GrowthBeyondInitialCapacityExercisesRealloc);
+    RUN_TEST(test_getPropertyValue_MalformedLineDoesNotBreakSubsequentLookups);
 
     RUN_TEST(test_parsePropFile_ReturnsMinusOneOnMissingFile);
     RUN_TEST(test_parsePropFile_EmptyFileReturnsSuccessWithZeroCount);
     RUN_TEST(test_parsePropFile_CountsSpuriousFieldsFromBlankAndCommentLines);
     RUN_TEST(test_parsePropFile_CountMatchesExpectedAfterReallocGrowth);
+    RUN_TEST(test_parsePropFile_MalformedLineValueScanStartsAtIndexZero);
     RUN_TEST(test_getValue_ReturnsValueWhenPresent);
     RUN_TEST(test_getValue_ReturnsKeyNotFoundLiteralWhenAbsent);
 
